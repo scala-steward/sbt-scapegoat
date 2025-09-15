@@ -4,6 +4,7 @@ import sbt.*
 import sbt.Keys.*
 
 import scala.language.postfixOps
+import org.johnnei.scapegoat.sbt.SbtCompat.*
 
 object ScapegoatSbtPlugin extends AutoPlugin {
 
@@ -11,8 +12,8 @@ object ScapegoatSbtPlugin extends AutoPlugin {
   val ArtifactId = "scalac-scapegoat-plugin"
 
   object autoImport {
-    val Scapegoat = config("scapegoat") extend Compile
-    val ScapegoatDeps = (config("scapegoat-dep") extend Compile).hide
+    val Scapegoat = config("scapegoat").extend(Compile)
+    val ScapegoatDeps = (config("scapegoat-dep").extend(Compile)).hide
 
     lazy val scapegoat = taskKey[Unit]("Run scapegoat quality checks")
     lazy val scapegoatCleanTask = taskKey[Unit]("Conditionally clean the scapegoat output directories")
@@ -66,11 +67,11 @@ object ScapegoatSbtPlugin extends AutoPlugin {
       Defaults.compileSettings ++
         Seq(
           sources := (Compile / sources).value,
-          managedClasspath := (Compile / managedClasspath).value,
-          unmanagedClasspath := (Compile / unmanagedClasspath).value,
-          scalacOptions := {
+          managedClasspath := Def.uncached((Compile / managedClasspath).value),
+          unmanagedClasspath := Def.uncached((Compile / unmanagedClasspath).value),
+          scalacOptions := Def.uncached({
             // find all deps for the compile scope
-            val scapegoatDependencies = (ScapegoatDeps / update).value matching configurationFilter(ScapegoatDeps.name)
+            val scapegoatDependencies = (ScapegoatDeps / update).value.matching(configurationFilter(ScapegoatDeps.name))
             // ensure we have the scapegoat dependency on the classpath and if so add it as a scalac plugin
             scapegoatDependencies.find(_.getAbsolutePath.contains(ArtifactId)) match {
               case None =>
@@ -120,11 +121,11 @@ object ScapegoatSbtPlugin extends AutoPlugin {
                   else Some(s"-P:scapegoat:minimalLevel:$customMinimalWarnLevel"),
                 ).flatten
             }
-          },
+          }),
         )
     } ++ Seq(
-      (Scapegoat / compile) := ((Scapegoat / compile) dependsOn scapegoatClean).value,
-      scapegoat := (Scapegoat / compile).value,
+      (Scapegoat / compile) := Def.uncached(((Scapegoat / compile).dependsOn(scapegoatClean)).value),
+      scapegoat := Def.uncached((Scapegoat / compile).value),
       scapegoatCleanTask := doScapegoatClean(
         (ThisBuild / scapegoatRunAlways).value,
         (Scapegoat / classDirectory).value,
@@ -168,7 +169,7 @@ object ScapegoatSbtPlugin extends AutoPlugin {
 
     components match {
       // versions >= 1.4.0 use the full cross version
-      case Array(major, minor) if major > 1 || minor >= 4 => mod cross CrossVersion.full
+      case Array(major, minor) if major > 1 || minor >= 4 => mod.cross(CrossVersion.full)
       case _ => mod
     }
   }
