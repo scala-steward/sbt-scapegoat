@@ -1,0 +1,4 @@
+test:
+  extends: [ .sbt ]
+  script:
+    - sbt 'test; scripted'
