@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     name := "sbt-scapegoat",
-    organization := "com.sksamuel.scapegoat",
+    organization := "org.johnnei.scapegoat",
     homepage := Some(url("https://github.com/scapegoat-scala/sbt-scapegoat")),
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     scmInfo := Some(
@@ -13,6 +13,12 @@ inThisBuild(
     ),
     developers := List(
       Developer(
+        "johnnei",
+        "Johnnei",
+        "@johnnei",
+        url("https://github.com/johnnei"),
+      ),
+      Developer(
         "sksamuel",
         "sksamuel",
         "@sksamuel",
@@ -20,6 +26,11 @@ inThisBuild(
       ),
     ),
     scalaVersion := "2.12.20",
+    publishTo := {
+      val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
+      if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+      else localStaging.value
+    },
   ),
 )
 
