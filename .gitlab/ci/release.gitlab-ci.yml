@@ -3,6 +3,15 @@ publish:
   rules:
     - if: $CI_COMMIT_TAG
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
   extends: [ .sbt ]
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: 0 # Full clone for sbt-dynver
   script:
-  - sbt ci-release
+  - |
+    if [[ "${CI_COMMIT_BRANCH:-false}" != "false" ]]; then
+      git config --global --add safe.directory $CI_PROJECT_DIR
+      git checkout -b $CI_COMMIT_BRANCH
+    fi
+  - sbt "show version" ci-release
