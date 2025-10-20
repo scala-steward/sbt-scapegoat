@@ -8,22 +8,8 @@ import org.johnnei.scapegoat.sbt.SbtCompat.*
 
 object ScapegoatSbtPlugin extends AutoPlugin {
 
-  private val OldGroupId = "com.sksamuel.scapegoat"
-  val GroupId = "org.johnnei.scapegoat"
+  val GroupId = "com.sksamuel.scapegoat"
   val ArtifactId = "scalac-scapegoat-plugin"
-
-  private sealed trait PublishEra {
-    val version: String
-    val groupId: String
-  }
-
-  private case class SamEra(override val version: String) extends PublishEra {
-    override val groupId: String = OldGroupId
-  }
-
-  private case class JohnneiEra(override val version: String) extends PublishEra {
-    override val groupId: String = GroupId
-  }
 
   object autoImport {
     val Scapegoat = config("scapegoat").extend(Compile)
@@ -149,29 +135,28 @@ object ScapegoatSbtPlugin extends AutoPlugin {
       // FIXME Cannot seem to make this a build setting (compile:crossTarget is an undefined setting)
       scapegoatOutputPath := (Compile / crossTarget).value.getAbsolutePath + "/scapegoat-report",
       libraryDependencies += {
-        val selectedScapegoatVersion: PublishEra = (scapegoatVersion ?).value.map(JohnneiEra.apply).getOrElse {
+        val selectedScapegoatVersion = (scapegoatVersion ?).value.getOrElse {
           scalaVersion.value match {
             // To give a better out of the box experience, default to a recent version of Scapegoat for known Scala versions
-            case "3.3.6" | "3.7.3" | "2.13.16" | "2.13.17" | "2.12.19" | "2.12.20" => JohnneiEra("3.2.0")
-            case "3.7.0" | "2.13.15" => SamEra("3.1.9")
-            case "3.3.5" | "3.6.4" => SamEra("3.1.8")
-            case "3.6.3" => SamEra("3.1.5")
-            case "3.3.4" | "3.6.2" => SamEra("3.1.4")
-            case "3.5.2" => SamEra("3.1.3")
-            case "2.13.14" => SamEra("3.1.2")
-            case "3.5.1" => SamEra("3.0.3")
-            case "3.3.3" => SamEra("3.0.2")
-            case "3.4.2" => SamEra("3.0.0")
-            case "2.13.13" | "2.12.18" => SamEra("2.1.6")
-            case "2.13.12" => SamEra("2.1.5")
-            case "2.13.11" | "2.12.17" => SamEra("2.1.4")
-            case "2.13.10" => SamEra("2.1.2")
-            case "2.13.9" | "2.12.16" => SamEra("2.1.1")
+            case "3.3.6" | "3.7.0" | "2.13.15" | "2.13.16" | "2.12.19" | "2.12.20" => "3.1.9"
+            case "3.3.5" | "3.6.4" => "3.1.8"
+            case "3.6.3" => "3.1.5"
+            case "3.3.4" | "3.6.2" => "3.1.4"
+            case "3.5.2" => "3.1.3"
+            case "2.13.14" => "3.1.2"
+            case "3.5.1" => "3.0.3"
+            case "3.3.3" => "3.0.2"
+            case "3.4.2" => "3.0.0"
+            case "2.13.13" | "2.12.18" => "2.1.6"
+            case "2.13.12" => "2.1.5"
+            case "2.13.11" | "2.12.17" => "2.1.4"
+            case "2.13.10" => "2.1.2"
+            case "2.13.9" | "2.12.16" => "2.1.1"
             // Default to the latest version with Scala 2.11 support to improve apparent compatibility
-            case _ => SamEra("1.4.17")
+            case _ => "1.4.17"
           }
         }
-        crossVersion(selectedScapegoatVersion.groupId %% ArtifactId % selectedScapegoatVersion.version) % ScapegoatDeps
+        crossVersion(GroupId %% ArtifactId % selectedScapegoatVersion) % ScapegoatDeps
       },
     )
   }
