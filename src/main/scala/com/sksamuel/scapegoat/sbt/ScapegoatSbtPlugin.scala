@@ -4,7 +4,7 @@ import sbt.*
 import sbt.Keys.*
 
 import scala.language.postfixOps
-import org.johnnei.scapegoat.sbt.SbtCompat.*
+import com.sksamuel.scapegoat.sbt.SbtCompat.*
 
 object ScapegoatSbtPlugin extends AutoPlugin {
 
