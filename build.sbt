@@ -1,7 +1,7 @@
 inThisBuild(
   List(
     name := "sbt-scapegoat",
-    organization := "org.johnnei.scapegoat",
+    organization := "com.sksamuel.scapegoat",
     homepage := Some(url("https://github.com/scapegoat-scala/sbt-scapegoat")),
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     scmInfo := Some(
@@ -12,12 +12,6 @@ inThisBuild(
       ),
     ),
     developers := List(
-      Developer(
-        "johnnei",
-        "Johnnei",
-        "@johnnei",
-        url("https://github.com/johnnei"),
-      ),
       Developer(
         "sksamuel",
         "sksamuel",
