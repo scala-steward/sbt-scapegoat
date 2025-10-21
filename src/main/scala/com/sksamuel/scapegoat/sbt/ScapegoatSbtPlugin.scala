@@ -4,6 +4,7 @@ import sbt.*
 import sbt.Keys.*
 
 import scala.language.postfixOps
+import com.sksamuel.scapegoat.sbt.SbtCompat.*
 
 object ScapegoatSbtPlugin extends AutoPlugin {
 
@@ -11,8 +12,8 @@ object ScapegoatSbtPlugin extends AutoPlugin {
   val ArtifactId = "scalac-scapegoat-plugin"
 
   object autoImport {
-    val Scapegoat = config("scapegoat") extend Compile
-    val ScapegoatDeps = (config("scapegoat-dep") extend Compile).hide
+    val Scapegoat = config("scapegoat").extend(Compile)
+    val ScapegoatDeps = (config("scapegoat-dep").extend(Compile)).hide
 
     lazy val scapegoat = taskKey[Unit]("Run scapegoat quality checks")
     lazy val scapegoatCleanTask = taskKey[Unit]("Conditionally clean the scapegoat output directories")
@@ -66,11 +67,11 @@ object ScapegoatSbtPlugin extends AutoPlugin {
       Defaults.compileSettings ++
         Seq(
           sources := (Compile / sources).value,
-          managedClasspath := (Compile / managedClasspath).value,
-          unmanagedClasspath := (Compile / unmanagedClasspath).value,
-          scalacOptions := {
+          managedClasspath := Def.uncached((Compile / managedClasspath).value),
+          unmanagedClasspath := Def.uncached((Compile / unmanagedClasspath).value),
+          scalacOptions := Def.uncached({
             // find all deps for the compile scope
-            val scapegoatDependencies = (ScapegoatDeps / update).value matching configurationFilter(ScapegoatDeps.name)
+            val scapegoatDependencies = (ScapegoatDeps / update).value.matching(configurationFilter(ScapegoatDeps.name))
             // ensure we have the scapegoat dependency on the classpath and if so add it as a scalac plugin
             scapegoatDependencies.find(_.getAbsolutePath.contains(ArtifactId)) match {
               case None =>
@@ -120,11 +121,11 @@ object ScapegoatSbtPlugin extends AutoPlugin {
                   else Some(s"-P:scapegoat:minimalLevel:$customMinimalWarnLevel"),
                 ).flatten
             }
-          },
+          }),
         )
     } ++ Seq(
-      (Scapegoat / compile) := ((Scapegoat / compile) dependsOn scapegoatClean).value,
-      scapegoat := (Scapegoat / compile).value,
+      (Scapegoat / compile) := Def.uncached(((Scapegoat / compile).dependsOn(scapegoatClean)).value),
+      scapegoat := Def.uncached((Scapegoat / compile).value),
       scapegoatCleanTask := doScapegoatClean(
         (ThisBuild / scapegoatRunAlways).value,
         (Scapegoat / classDirectory).value,
@@ -137,7 +138,8 @@ object ScapegoatSbtPlugin extends AutoPlugin {
         val selectedScapegoatVersion = (scapegoatVersion ?).value.getOrElse {
           scalaVersion.value match {
             // To give a better out of the box experience, default to a recent version of Scapegoat for known Scala versions
-            case "3.3.6" | "3.7.0" | "2.13.15" | "2.13.16" | "2.12.19" | "2.12.20" => "3.1.9"
+            case "3.3.6" | "3.7.3" | "2.13.16" | "2.13.17" | "2.12.19" | "2.12.20" => "3.2.0"
+            case "3.7.0" | "2.13.15" => "3.1.9"
             case "3.3.5" | "3.6.4" => "3.1.8"
             case "3.6.3" => "3.1.5"
             case "3.3.4" | "3.6.2" => "3.1.4"
@@ -168,7 +170,7 @@ object ScapegoatSbtPlugin extends AutoPlugin {
 
     components match {
       // versions >= 1.4.0 use the full cross version
-      case Array(major, minor) if major > 1 || minor >= 4 => mod cross CrossVersion.full
+      case Array(major, minor) if major > 1 || minor >= 4 => mod.cross(CrossVersion.full)
       case _ => mod
     }
   }
